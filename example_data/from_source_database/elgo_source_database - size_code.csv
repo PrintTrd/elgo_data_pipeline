@@ -1,0 +1,8 @@
+code,name,description,default price,status
+S,S,small,0,TRUE
+M,M,medium,0,TRUE
+L,L,large,0,TRUE
+XL,XL,extra-large,0,TRUE
+F,F,free-size,0,TRUE
+5,5pcs,package 5,0,TRUE
+3,3pcs,package 3,0,TRUE
