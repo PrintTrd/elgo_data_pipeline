@@ -5,7 +5,7 @@ dataframes = {}
 csv_list = ["sale_order", "canceled_order", "order_item", "canceled_item", "waybill", "address", "customer_code", "inventory", "product_code", "color_code", "material_code", "size_code", "price"]
 
 for file_name in csv_list:
-  dataframes[f'{file_name}'] = pl.read_csv(f'{file_name}.csv', has_header=True, infer_schema_length=10000, null_values=["COMPUTED_VALUE"])
+  dataframes[f'{file_name}'] = pl.read_csv(f'..\example_data\from_source_database\{file_name}.csv', has_header=True, infer_schema_length=10000, null_values=["COMPUTED_VALUE"])
 print(dataframes)
 
 print(dataframes["sale_order"].columns)
