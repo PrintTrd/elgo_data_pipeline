@@ -17,8 +17,14 @@ logging.basicConfig(
 )
 LOGGER.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
+SOURCE_FOLDER = f"{os.getcwd()}\example_data\\renamed_source_database"
+CSV_FILE_LIST = glob.glob(f"{SOURCE_FOLDER}\*.csv")
+CSV_NAME_LIST = [
+    os.path.splitext(os.path.basename(files))[0] for files in CSV_FILE_LIST
+]
 
-def get_dataframe(csv_folder_path):
+
+def get_dataframe():
     """
     Read csv, create dataframe and remove all null columns/rows.
     This function can apply to automate pipeline in future.
@@ -27,12 +33,10 @@ def get_dataframe(csv_folder_path):
     - df (dict): dataframe
     """
     df = {}
-    csv_file_list = glob.glob(f"{csv_folder_path}\*.csv")
-    for files in csv_file_list:
-        file_name = os.path.splitext(os.path.basename(files))[0]
+    for file_name in CSV_NAME_LIST:
         # read csv
         df[f"{file_name}"] = pl.read_csv(
-            f"{csv_folder_path}\{file_name}.csv",
+            f"{SOURCE_FOLDER}\{file_name}.csv",
             has_header=True,
             infer_schema_length=10000,
             null_values=["COMPUTED_VALUE"],
@@ -208,13 +212,40 @@ def rename_columns(df):
         )
         LOGGER.debug("Renamed customer_code's columns: %s", df["customer_code"].columns)
 
+    return df
+
+
+def fill_null_address_and_change_date_format(df):
+    for df_name in CSV_NAME_LIST:
+        for column in df[df_name]:
+            if column.name in ["billing_address", "shipping_address"]:
+                df[df_name] = df[df_name].with_columns(
+                    pl.col("billing_address").fill_null(pl.col("shipping_address")),
+                    pl.col("shipping_address").fill_null(pl.col("billing_address")),
+                )
+            if "_at" in column.name and column.dtype != pl.Datetime:
+                df[df_name] = df[df_name].with_columns(
+                    pl.coalesce(
+                        pl.col(column.name).str.strptime(
+                            pl.Datetime, "%d/%m/%Y %H:%M:%S", strict=False
+                        ),
+                        pl.col(column.name).str.strptime(
+                            pl.Date, "%d/%m/%Y", strict=False
+                        ),
+                    )
+                )
+
     LOGGER.info(df)
     return df
 
 
 if __name__ == "__main__":
-    current_dir = os.getcwd()
-    dataframe_dict = get_dataframe(
-        f"{current_dir}\example_data\\renamed_source_database"
+    dataframe_dict = get_dataframe()
+    extracted_df = rename_columns(dataframe_dict)
+    # remove "-CN" from invoice_number column and add "Canceled" to new status column
+    extracted_df["canceled_order"] = extracted_df["canceled_order"].with_columns(
+        pl.lit("Canceled").alias("status"),
+        pl.col("invoice_number").str.replace("-CN", ""),
     )
-    processed_df = rename_columns(dataframe_dict)
+
+    transformed_df = fill_null_address_and_change_date_format(extracted_df)
