@@ -9,13 +9,12 @@ import logging
 
 import polars as pl
 
-DEBUG = False
-LOGGER = logging.getLogger(__name__)
+DEBUG_MODE = False
+LOGGER = logging.getLogger("scripts" + __name__)
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(levelname)s - [%(module)s %(funcName)s()] %(message)s",
+    level=logging.DEBUG if DEBUG_MODE else logging.INFO,
+    format="%(levelname)s - [%(module)s %(funcName)s]: %(message)s",
 )
-LOGGER.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
 SOURCE_FOLDER = f"{os.getcwd()}\example_data\\renamed_source_database"
 CSV_FILE_LIST = glob.glob(f"{SOURCE_FOLDER}\*.csv")
@@ -49,6 +48,13 @@ def get_dataframe():
                 if not (column.null_count() == df[f"{file_name}"].height)
             ]
         ]
+        # replace "-" with null, otherwise keep original value
+        df[f"{file_name}"] = df[f"{file_name}"].with_columns(
+            pl.when(pl.col(pl.String) == "-")
+            .then(None)
+            .otherwise(pl.col(pl.String))
+            .name.keep()
+        )
         # remove all null rows
         df[f"{file_name}"] = df[f"{file_name}"].filter(
             ~pl.all_horizontal(pl.all().is_null())
@@ -215,7 +221,7 @@ def rename_columns(df):
     return df
 
 
-def fill_null_address_and_change_date_format(df):
+def fill_null_and_change_type_format(df):
     for df_name in CSV_NAME_LIST:
         for column in df[df_name]:
             if column.name in ["billing_address", "shipping_address"]:
@@ -234,9 +240,45 @@ def fill_null_address_and_change_date_format(df):
                         ),
                     )
                 )
+            if column.name == "phone":
+                df[df_name] = df[df_name].with_columns(
+                    pl.col("phone").cast(pl.String),
+                )
+                # replace "-" in phone number like 080-000-000
+                df[df_name] = df[df_name].with_columns(
+                    pl.when(pl.col("phone").str.contains_any(["-"]))
+                    .then(pl.col("phone").str.replace_all("-", ""))
+                    .when(pl.col("phone").str.contains("[6][6][0-9]{9}$|[0][0]"))
+                    .then(pl.col("phone").str.replace("^([6][6]|[0][0])", "0"))
+                    .when(pl.col("phone").str.contains("[6][6][0][0-9]{9}$"))
+                    .then(pl.col("phone").str.replace("^[6][6]", ""))
+                    .otherwise(pl.col("phone"))
+                )
+                phone_filter = (
+                    df[df_name]
+                    .select(pl.col(pl.String))
+                    .filter(pl.col("phone").str.contains("^([6][6]|[0][0])"))
+                )
+                LOGGER.info(f"{df_name}: {phone_filter}")
 
-    LOGGER.info(df)
     return df
+
+
+# def clean_phone_number(number):
+#     number = number.lstrip("+").lstrip("0").replace("-", "")
+#     if not number.startswith("66"):
+#         number = "66" + number
+#     if len(number) != 13 or not number.isdigit():
+#         number = "Invalid Number"
+
+#     return number
+
+
+def add_fake_data(df):
+    from faker import Faker
+
+    fake = Faker("th_TH")
+    # lambda x: fake.name()
 
 
 if __name__ == "__main__":
@@ -247,5 +289,22 @@ if __name__ == "__main__":
         pl.lit("Canceled").alias("status"),
         pl.col("invoice_number").str.replace("-CN", ""),
     )
+    transformed_df = fill_null_and_change_type_format(extracted_df)
 
-    transformed_df = fill_null_address_and_change_date_format(extracted_df)
+    # combine data and check rows
+    LOGGER.debug(transformed_df["sale_order"].select(pl.count("order_id")))
+    LOGGER.debug(transformed_df["canceled_order"].select(pl.count("cancel_id")))
+    transformed_df["sale_order"] = pl.concat(
+        [transformed_df["sale_order"], transformed_df["canceled_order"]],
+        how="diagonal",
+    )
+    LOGGER.debug(transformed_df["sale_order"].select(pl.count("order_id")))
+
+    transformed_df["sale_order"] = transformed_df["sale_order"].with_columns(
+        pl.col("created_at").fill_null(pl.col("updated_at"))
+    )
+    LOGGER.debug("combined sale_order table: %s", transformed_df["sale_order"])
+    LOGGER.debug(transformed_df["sale_order"].filter(pl.col("status") == "Canceled"))
+
+    # add fake data
+    # add_fake_data(transformed_df)
