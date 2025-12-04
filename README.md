@@ -11,8 +11,8 @@
 Data integration จะฝึกใช้ polars เป็นหลัก
 >ไม่ได้อัพโหลด CSV address, canceled_order, customer_code, sale_order, waybill ให้มาเพราะมีข้อมูลส่วนตัวอยู่ !
 
-กรณีลองใช้บน [Google Colab](https://colab.research.google.com/drive/186CG2WeeymonYSksQVve_GKEXxvTGr43?usp=sharing) หรือเปิดไฟล์ .ipynb<br>
-สามารถนำเข้า csv จากโฟลเดอร์ ..\example_data\renamed_source_database ก่อนเริ่มรันได้เลย
+กรณีลองใช้บน [Google Colab](https://colab.research.google.com/drive/1_eGQVK0TWu8GBq6w9AqMe8WNffU6Lh7z?usp=sharing) หรือเปิดไฟล์ .ipynb<br>
+สามารถนำเข้า csv จากโฟลเดอร์ใน git ..\example_data\renamed_source_database ไปวางไว้นอกโฟลเดอร์ sample_data ของ Google Colab ก่อนเริ่มรันได้เลย
 
 กรณีจะรันไฟล์ python<br>
 Run these commands in Command Prompt or PowerShell
