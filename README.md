@@ -11,8 +11,8 @@
 Data integration จะฝึกใช้ polars เป็นหลัก
 >ไม่ได้อัพโหลด CSV address, canceled_order, customer_code, sale_order, waybill ให้มาเพราะมีข้อมูลส่วนตัวอยู่ !
 
-กรณีลองใช้บน Google Colab <br>
-สามารถนำเข้า csv จากโฟลเดอร์ ..\example_data\renamed_source_database โดยข้ามการติดตั้งไปได้เลย
+กรณีลองใช้บน ![Google Colab](https://colab.research.google.com/drive/186CG2WeeymonYSksQVve_GKEXxvTGr43?usp=sharing) หรือเปิดไฟล์ .ipynb<br>
+สามารถนำเข้า csv จากโฟลเดอร์ ..\example_data\renamed_source_database ก่อนเริ่มรันได้เลย
 
 กรณีจะรันไฟล์ python<br>
 Run these commands in Command Prompt or PowerShell
@@ -58,5 +58,3 @@ Run these commands in Command Prompt or PowerShell
     os.environ["SPARK_HOME"] = "/content/spark-3.5.1-bin-hadoop3"
 
     !pip install pyspark==3.5.1
-
-### How to run script
