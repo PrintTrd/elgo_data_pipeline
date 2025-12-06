@@ -1,5 +1,5 @@
 # elgo_data_pipeline
-ข้อมูล Business Sales Dataset ที่ได้มาจากคนรู้จักนั้น มีทั้งหมด 14 tables ซึ่งมาจาก database ที่ยังไม่นิ่ง ไม่ได้ผ่านการออกแบบมาดี มีความซ้ำซ้อนอยู่มาก และรับข้อมูลมาจากหลายช่องทางการขาย/platform รวมกัน หลังจากดูข้อมูลคร่าว ๆ ก็ได้ไปคุยกับเจ้าของข้อมูลเพื่อทำความเข้าใจมากขึ้น
+ข้อมูล Business Sales Dataset ที่ได้มาจากคนรู้จักนั้น มีทั้งหมด 13 tables ซึ่งมาจาก database ที่ยังไม่นิ่ง ไม่ได้ผ่านการออกแบบมาดี มีความซ้ำซ้อนอยู่มาก และรับข้อมูลมาจากหลายช่องทางการขาย/platform รวมกัน หลังจากดูข้อมูลคร่าว ๆ ก็ได้ไปคุยกับเจ้าของข้อมูลเพื่อทำความเข้าใจมากขึ้น
 ## Data integration
 เนื่องจากมีความซ้ำซ้อนอยู่มากจึงต้อง normalize ข้อมูล โดยเริ่มจากการไปช่วยออกแบบ ER diagrams ให้ใหม่ก่อน เพื่อวางแผนหน้าตาโครงสร้างข้อมูลใหม่ที่เราควรจะแปลงไปด้วย
 หลังจากออกแบบใหม่ก็จะเลือกตัดส่วนที่ดูไม่เกี่ยวข้องกับการขายออกไปบางส่วน เช่น table inventory_input ที่เกี่ยวข้องกับการจัดการ stock สินค้า เพื่อนำมาใช้กับโปรเจคนี้ 
@@ -17,17 +17,14 @@ Data integration จะฝึกใช้ polars เป็นหลัก
 กรณีจะรันไฟล์ python<br>
 Run these commands in Command Prompt or PowerShell
 
-    python --version
     pip install polars
-
-### How to run script
-`python ..\elgo_data_pipeline\scripts\preprocessing.py`
+    python scripts\preprocessing.py
 
 ### Data Integration Plan Steps
 1. Extract and rename tables
 2. Transform - Schema/Value Integration
     - Rename columns
-    - Change format and add day
+    - Change format
     - รวม data
     - แยก data
     - สร้าง fake values
